@@ -9,7 +9,9 @@ declare module 'vue' {
   export interface GlobalComponents {
     ElButton: typeof import('element-plus/es')['ElButton']
     GuideItem: typeof import('./src/components/Guide/GuideItem.vue')['default']
+    HeaderDefault: typeof import('./src/components/Layout/HeaderDefault.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SidebarMenu: typeof import('./src/components/Layout/SidebarMenu.vue')['default']
   }
 }

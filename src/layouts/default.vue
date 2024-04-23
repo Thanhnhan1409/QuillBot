@@ -7,7 +7,4 @@
     Header
   </header>
   <RouterView />
-  <footer>
-    Footer
-  </footer>
 </template>
