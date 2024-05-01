@@ -82,7 +82,7 @@ function handleActiveItem(id: number) {
     <div :class="$style.sidebarContainer">
         <div :class="[$style.sidebarItemBorder, $style.sidebarItemBox]">
             <div v-for="item in menuList" :key="item.id" @click="handleActiveItem(item.id)">
-                <div :class="$style.sidebarItem">
+                <div :class="[$style.sidebarItem, activeItem === item.id && $style.sidebarActiveItem]">
                     <img v-if="item.id === 6 || item.id === 4" :src="item.icon" alt="" width="24" height="24">
                     <div v-else :class="$style.sidebarItemIconBox" :style="{ backgroundColor: item.color }">
                         <img :src="item.icon" alt="" width="20" height="20">
@@ -135,6 +135,7 @@ function handleActiveItem(id: number) {
     overflow: auto;
     padding: 8px;
     width: 96px;
+    background-color: #ffff;
 
     &::-webkit-scrollbar {
         display: none;
@@ -154,10 +155,23 @@ function handleActiveItem(id: number) {
     gap: 4px;
     cursor: pointer;
 
+    &.sidebarActiveItem {
+        background-color: #E8F3EB;
+
+        &:hover {
+            background-color: #E8F3EB;
+        }
+
+        &>p {
+            font-weight: 500;
+        }
+    }
+
     &:hover {
         background-color: #f5f5f5;
     }
 }
+
 
 .sidebarItemIconBox {
     border-radius: 50%;
@@ -206,7 +220,7 @@ function handleActiveItem(id: number) {
     border-bottom: 1px solid #DEE1E3;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
 }
 
 .sidebarItemBoxIcon {
@@ -219,6 +233,7 @@ function handleActiveItem(id: number) {
 }
 
 .sidebarGGItem {
+    margin-top: 10px;
     position: relative;
 
     &>.sidebarItemGGIcon {
@@ -233,6 +248,7 @@ function handleActiveItem(id: number) {
 }
 
 .sidebarAppItem {
+    margin: 10px 0;
     position: relative;
 
     &>.sidebarAppMemu {
