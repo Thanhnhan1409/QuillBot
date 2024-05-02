@@ -1,9 +1,6 @@
 <script setup lang="ts">
-import { Icon } from '@iconify/vue'
 import { openaiApi } from '@/api/openai'
 
-const isExpand = ref<boolean>(false)
-const icon = ref<string>('fluent:navigation-20-filled')
 const text = ref<string>('')
 const result = ref<string>('')
 const languageList = [
@@ -14,16 +11,6 @@ const languageList = [
   'All'
 ]
 const activeItem = ref<number>(1)
-
-function toggleSidebar() {
-  isExpand.value = !isExpand.value
-}
-
-function changeIcon() {
-  if (!isExpand.value)
-    icon.value = 'ic:round-keyboard-double-arrow-right'
-  else icon.value = 'tabler:chevrons-left'
-}
 
 function handleActiveItem(id: number) {
   activeItem.value = id
@@ -63,7 +50,7 @@ async function parapharseText() {
           </div>
           <div :class="$style.homeTextArea">
             <div :class="$style.homeTextAreaLeftBox">
-              <textarea v-model="text" name="" id="" cols="30" rows="25"
+              <textarea :class="$style.homeTextAreaTag" v-model="text" name="" id="" cols="30" rows="25"
                 placeholder='To rewrite text, enter or paste it here and press "Paraphrase."'></textarea>
               <div v-show="!text" :class="$style.homeTextAreaBoxPaste" @click="pasteText">
                 <div :class="$style.homeTextAreaBoxPasteBox">
@@ -82,10 +69,12 @@ async function parapharseText() {
                   <Icon :class="$style.homeIcon" icon="bi:cloud-arrow-up" />
                   <span>Upload Doc</span>
                 </div>
-                <button :class="$style.homeTextAreaLeftButton">Paraphrase</button>
+                <button :class="$style.homeTextAreaLeftButton" @click="parapharseText">Paraphrase</button>
               </div>
             </div>
             <div :class="$style.homeTextAreaRightBox">
+              <textarea :class="$style.homeTextAreaTag" disable name="" id="" v-model="result" cols="30" rows="25"
+                placeholder='To rewrite text, enter or paste it here and press "Paraphrase."'></textarea>
             </div>
           </div>
         </div>
@@ -223,15 +212,20 @@ async function parapharseText() {
 .homeTextArea {
   background-color: #ffff;
   display: flex;
-  align-items: center;
+  align-items: start;
 }
 
 .homeTextAreaLeftBox {
   position: relative;
   width: 50%;
   border-right: 3px solid rgba(0, 0, 0, 0.2);
+}
 
-  textarea {
+.homeTextAreaRightBox {
+  width: 50%;
+}
+
+.homeTextAreaTag {
     resize: none;
     width: 100%;
     border: none;
@@ -246,7 +240,6 @@ async function parapharseText() {
     &:focus {
       outline: none;
     }
-  }
 }
 
 .homeTextAreaLeftFooter {
