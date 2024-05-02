@@ -29,6 +29,12 @@ function handleActiveItem(id: number) {
   activeItem.value = id
 }
 
+function pasteText() {
+  navigator.clipboard.readText().then(clipText => {
+    text.value = clipText;
+  });
+}
+
 async function parapharseText() {
   try {
     const res = await openaiApi.getParaphraseTextFull(text.value)
@@ -45,6 +51,7 @@ async function parapharseText() {
     <SidebarAuth :class="$style.homeSidebar" />
     <div :class="$style.homeContent">
       <div :class="$style.homeContentParaPhrase">
+        <TabRight />
         <ul :class="$style.homeContentLanguageList">
           <li v-for="(item, index) in languageList" @click="handleActiveItem(index)"
             :class="activeItem === index && $style.homeLanguageActiveItem" :key="index">{{ item }}</li>
@@ -56,8 +63,20 @@ async function parapharseText() {
           </div>
           <div :class="$style.homeTextArea">
             <div :class="$style.homeTextAreaLeftBox">
-              <textarea name="" id="" cols="30" rows="25"
+              <textarea v-model="text" name="" id="" cols="30" rows="25"
                 placeholder='To rewrite text, enter or paste it here and press "Paraphrase."'></textarea>
+              <div v-show="!text" :class="$style.homeTextAreaBoxPaste" @click="pasteText">
+                <div :class="$style.homeTextAreaBoxPasteBox">
+                  <svg :class="$style.homeTextArerPasteIcon"
+                    class="MuiSvgIcon-root MuiSvgIcon-colorPrimary MuiSvgIcon-fontSizeMedium" focusable="false"
+                    aria-hidden="true" viewBox="0 0 24 29" width="24" height="29" style="font-size: 30px;">
+                    <path width="24" height="29" viewBox="0 0 24 29" fill="#499557" xmlns="http://www.w3.org/2000/svg"
+                      d="M20.7418 3.25678H15.4522C14.9207 1.78883 13.5286 0.72583 11.8835 0.72583C10.2384 0.72583 8.84639 1.78883 8.31489 3.25678H3.02521C1.63319 3.25678 0.494263 4.3957 0.494263 5.78772V26.0353C0.494263 27.4273 1.63319 28.5662 3.02521 28.5662H20.7418C22.1339 28.5662 23.2728 27.4273 23.2728 26.0353V5.78772C23.2728 4.3957 22.1339 3.25678 20.7418 3.25678ZM11.8835 3.25678C12.5795 3.25678 13.149 3.82624 13.149 4.52225C13.149 5.21826 12.5795 5.78772 11.8835 5.78772C11.1875 5.78772 10.618 5.21826 10.618 4.52225C10.618 3.82624 11.1875 3.25678 11.8835 3.25678ZM20.7418 26.0353H3.02521V5.78772H5.55615V9.58414H18.2109V5.78772H20.7418V26.0353Z">
+                    </path>
+                  </svg>
+                  <i>Paste Text</i>
+                </div>
+              </div>
               <div :class="$style.homeTextAreaLeftFooter">
                 <div :class="$style.homeTextAreaLeftUpload">
                   <Icon :class="$style.homeIcon" icon="bi:cloud-arrow-up" />
@@ -71,6 +90,8 @@ async function parapharseText() {
           </div>
         </div>
       </div>
+
+      <PreniumBenefits />
 
       <div :class="$style.homeGetPremium">
         <div :class="$style.homeGetPremiumContent">
@@ -138,6 +159,7 @@ async function parapharseText() {
 }
 
 .homeContentParaPhrase {
+  position: relative;
   padding: 25px 100px 44px 40px;
 
 }
@@ -168,6 +190,7 @@ async function parapharseText() {
 }
 
 .homeTextAreaBox {
+  position: relative;
   box-shadow: 0px 4px 22px 0px #00000033;
 }
 
@@ -204,6 +227,7 @@ async function parapharseText() {
 }
 
 .homeTextAreaLeftBox {
+  position: relative;
   width: 50%;
   border-right: 3px solid rgba(0, 0, 0, 0.2);
 
@@ -211,13 +235,16 @@ async function parapharseText() {
     resize: none;
     width: 100%;
     border: none;
-    padding: 20px 36px 8px 20px;
+    padding: 30px 36px 8px 20px;
 
     &::placeholder {
-      line-height: 30px;
       font-size: 16px;
       color: #8B8B8B;
       font-weight: 300;
+    }
+
+    &:focus {
+      outline: none;
     }
   }
 }
@@ -261,6 +288,7 @@ async function parapharseText() {
   color: #ffff;
   border: none;
   border-radius: 25px;
+  cursor: pointer;
 }
 
 .homeGetPremium {
@@ -270,7 +298,10 @@ async function parapharseText() {
 }
 
 .homeGetPremiumContent {
-  padding: 0 10%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .homeGetPremiumDescription {
@@ -278,6 +309,7 @@ async function parapharseText() {
   font-weight: 400;
   line-height: 44px;
   color: #172b4d;
+  max-width: 66.67%;
   padding-bottom: 32px;
 }
 
@@ -314,5 +346,42 @@ async function parapharseText() {
     line-height: 24px;
     color: #172b4d;
   }
+}
+
+.homeTextAreaBoxPaste {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  justify-content: center;
+  position: absolute;
+  top: 40%;
+  margin-bottom: 20px;
+  gap: 12px;
+  transform: translateX(-50%);
+  left: 50%;
+  border: 1px solid #499557;
+  border-radius: 6px;
+}
+
+.homeTextAreaBoxPasteBox {
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+  padding: 10px;
+  width: 130px;
+  height: 74px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+
+  i {
+    color: #499557;
+  }
+}
+
+.homeTextArerPasteIcon {
+  color: #499557;
+  width: 24px;
 }
 </style>
