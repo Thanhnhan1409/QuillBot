@@ -4,7 +4,7 @@
 
 <template>
   <header>
-    Header
+    <HeaderDefault />
   </header>
   <RouterView />
 </template>

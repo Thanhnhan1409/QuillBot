@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Icon } from '@iconify/vue';
+// import { Icon } from '@iconify/vue';
 
 defineProps<{
     isExpand: boolean
@@ -71,7 +71,7 @@ const hoverExpand = ref<boolean>(false)
 function handleActiveItem(id: number) {
     activeItem.value = id
 }
-const emit = defineEmits<{
+defineEmits<{
     (e: "toggleSidebar"): void
 }>()
 </script>
@@ -203,7 +203,6 @@ const emit = defineEmits<{
 .sidebarItemTitle {
     font-size: 13px;
     width: 65%;
-    font-weight: 600;
 }
 
 .sidebarItemBorder {
