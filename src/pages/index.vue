@@ -34,8 +34,8 @@ async function parapharseText() {
 </script>
 
 <template>
-  <div>
-    <SidebarAuth :class="$style.homeSidebar" />
+  <div :class="$style.homeContainer">
+    <SidebarAuth />
     <div :class="$style.homeContent">
       <div :class="$style.homeContentParaPhrase">
         <TabRight />
@@ -105,10 +105,15 @@ async function parapharseText() {
         </div>
       </div>
     </div>
+    <FooterAuth />
   </div>
 </template>
 
 <style module lang="scss">
+.homeContainer {
+  margin-left: 96px;
+}
+
 .iconBox {
   width: 24px;
   height: 24px;
@@ -137,7 +142,6 @@ async function parapharseText() {
 }
 
 .homeContent {
-  margin-left: 96px;
   margin-top: 52px;
   background-color: #f1f1f1;
   // height: 100vh;
