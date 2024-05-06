@@ -1,3 +1,48 @@
+<script setup lang="ts">
+
+const isMenuAvailable = ref<boolean>(false)
+
+interface IUserMenu {
+    id: number
+    title: string
+    icon?: string
+    content?: string
+}
+
+const userMenu: IUserMenu[] = [
+    {
+        id: 1,
+        title: 'Email',
+        content: 'phanthithanhnhan1409@gmail.com'
+    },
+    {
+        id: 2,
+        icon: 'material-symbols:person-2-outline',
+        title: 'Account details',
+    },
+    {
+        id: 3,
+        icon: 'solar:moon-bold',
+        title: 'Switch to dark',
+    },
+    {
+        id: 4,
+        icon: 'material-symbols:help-outline-rounded',
+        title: 'Help center',
+    },
+    {
+        id: 5,
+        icon: 'material-symbols:mail-outline',
+        title: 'Contact us',
+    },
+    {
+        id: 6,
+        icon: 'ci:log-out',
+        title: 'Log out',
+    },
+]
+</script>
+
 <template>
     <div :class="$style.headerContainer">
         <div :class="$style.headerLeft">
@@ -19,18 +64,21 @@
         <span :class="$style.headerTitle">Paraphraser</span>
         <div :class="$style.headerRight">
             <button :class="$style.headerButton">
-                <!-- <Icon :class="$style.headerDiamondIcon" icon="mdi-light:diamond" /> -->
-                <svg
-                    class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-10dohqv" focusable="false" aria-hidden="true"
-                    viewBox="0 0 16 15" style="width:18px;height:20px;margin-right:8px">
-                    <path
-                        d="M8.05882 14L14.7647 4.42727M8.05882 14L1 4.42727M8.05882 14L5.70588 4.42727M8.05882 14L10.4118 4.42727M14.7647 4.42727L12.5294 1M14.7647 4.42727H1M12.5294 1L10.4118 4.42727M12.5294 1H8.05882M3.35294 1L1 4.42727M3.35294 1L5.70588 4.42727M3.35294 1H8.05882M5.70588 4.42727L8.05882 1M10.4118 4.42727L8.05882 1"
-                        stroke="white" fill="white" stroke-width="0.8" stroke-linejoin="round"/>
-                </svg>
+                <Icon icon="system-uicons:diamond" :class="$style.headerDiamondIcon" color="#ffff" />
                 <span>Upgrade to Premium</span>
             </button>
-            <img :class="$style.headerImage" src="https://assets.quillbot.com/images/American.svg" alt="">
-            <img :class="$style.headerImage" src="https://assets.quillbot.com/images/American.svg" alt="">
+            <div @mouseover="isMenuAvailable = true" @mouseleave="isMenuAvailable = false" :class="$style.headerUserbox">
+                <img :class="$style.headerImage" src="https://assets.quillbot.com/images/American.svg" alt="">
+                <ul v-show="isMenuAvailable" :class="$style.headerUserMenu">
+                    <li :class="$style.headerUserMenuItem" v-for="(item, index) in userMenu" :key="index">
+                        <Icon :class="$style.headerIcon" v-show="item.icon" :icon="item.icon || ''" color="rgb(95,99,104)"/>
+                        <div>
+                            <p :class="$style.headerMenuItemTitle">{{ item.title }}</p>
+                            <p :class="$style.headerMenuItemContent" v-show="item.content">{{ item.content }}</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 </template>
@@ -81,6 +129,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 24px;
+    gap: 4px;
 
     span {
         font-size: 14px;
@@ -101,11 +150,46 @@
 .headerImage {
     width: 30px;
     height: 30px;
+    cursor: pointer;
     border-radius: 50%;
 }
 
 .headerDiamondIcon {
     width: 20px;
     height: 20px;
+}
+
+.headerUserbox {
+    position: relative;
+}
+
+.headerUserMenu {
+    position: fixed;
+    z-index: 99;
+    width: 240px;
+    display: flex;
+    flex-flow: column wrap;
+    background-color: #ffff;
+    right: 10px;
+    border: 1px solid rgb(222, 225, 227);
+    border-radius: 8px;
+    font-size: 13px;
+    box-shadow: rgba(0, 0, 0, 0.15) 0px 2px 3px 0px;
+}
+
+.headerUserMenuItem {
+    padding: 11px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid rgb(222, 225, 227);
+}
+
+.headerMenuItemTitle {
+    font-weight: 600;
+}
+
+.headerMenuItemContent {
+    font-weight: 400;
 }
 </style>

@@ -184,13 +184,13 @@ async function parapharseText() {
 
 .homeTextAreaBox {
   position: relative;
-  box-shadow: 0px 4px 22px 0px #00000033;
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 20px 20px 0px;;
 }
 
 .homeTextAreaBoxHeader {
   position: sticky;
   top: 49px;
-  z-index: 10;
+  z-index: 1;
   line-height: 1.5;
   height: 50px;
   display: flex;
