@@ -2,24 +2,57 @@
 import { openaiApi } from '@/api/openai'
 
 const text = ref<string>('')
+const isCollapseLanguageList = ref<boolean>(false)
 const result = ref<string>('')
 const languageList = [
   'English (US)',
   'Chinese',
   'Hindi',
   'French',
-  'All'
+  'All',
+  'Afrikaans',
+  'German',
+  'Romanian',
+  'Chinese',
+  'Hindi',
+  'Russian',
+  'and Danish',
+  'Indonesian',
+  'Spanish',
+  'Dutch',
+  'Italian',
+  'Swedish',
+  'English (AU)',
+  'Japanese',
+  'Tagalog',
+  'English (CA)',
+  'Malay',
+  'Turkish',
+  'English (UK)',
+  'Norwegian',
+  'Ukrainian',
+  'English (US)',
+  'Polish',
+  'Vietnamese',
+  'French',
+  'Portuguese',
 ]
 const activeItem = ref<number>(1)
 
 function handleActiveItem(id: number) {
-  activeItem.value = id
+  if (id === 4) {
+    isCollapseLanguageList.value = !isCollapseLanguageList.value
+  }
+  else {
+    activeItem.value = id
+    isCollapseLanguageList.value = false
+  }
 }
 
 function pasteText() {
-  navigator.clipboard.readText().then(clipText => {
-    text.value = clipText;
-  });
+  navigator.clipboard.readText().then((clipText) => {
+    text.value = clipText
+  })
 }
 
 async function parapharseText() {
@@ -39,27 +72,45 @@ async function parapharseText() {
     <div :class="$style.homeContent">
       <div :class="$style.homeContentParaPhrase">
         <TabRight />
-        <ul :class="$style.homeContentLanguageList">
-          <li v-for="(item, index) in languageList" @click="handleActiveItem(index)"
-            :class="activeItem === index && $style.homeLanguageActiveItem" :key="index">{{ item }}</li>
-        </ul>
+        <div :class="$style.homeContentLanguageList">
+          <div v-for="(item, index) in languageList" v-show="index < 5" :key="index"
+            :class="[(activeItem === index || (activeItem > 4 && index === 1)) && $style.homeLanguageActiveItem, $style.homeContentLanguageListItem]"
+            @click="handleActiveItem(index)">
+            <span>{{ index === 1 && activeItem > 4 ? languageList[activeItem] : item }}</span>
+            <Icon v-show="item === 'All'"
+              :icon="isCollapseLanguageList ? 'material-symbols:keyboard-arrow-up-rounded' : 'material-symbols:keyboard-arrow-down-rounded'" />
+          </div>
+          <div v-show="isCollapseLanguageList" :class="$style.homeExpandLanguages">
+            <div v-for="(expandItem, id) in languageList" v-show="expandItem !== 'All'" :key="id"
+              :class="id === activeItem && $style.homeExpandLanguagesActiveItem" @click="handleActiveItem(id)">
+              <span>{{ expandItem }}</span>
+              <Icon v-show="id === activeItem" :class="$style.homeIcon" icon="material-symbols:check-small-rounded"
+                color="rgb(46, 125, 50)" />
+            </div>
+          </div>
+        </div>
         <div :class="$style.homeTextAreaBox">
           <div :class="$style.homeTextAreaBoxHeader">
-            <span :class="$style.homeTextAreaBoxHeaderTitle">Models:</span>
-            <span :class="$style.homeTextAreaBoxHeaderValue">Standard</span>
+            <div>
+              <span :class="$style.homeTextAreaBoxHeaderTitle">Models:</span>
+              <span :class="$style.homeTextAreaBoxHeaderValue">Standard</span>
+            </div>
+            <div :class="$style.homeTextAreaHeaderBtn">
+              <Icon :class="$style.homeIcon" icon="logos:chrome" />
+              <span>Add to Chrome</span>
+            </div>
           </div>
           <div :class="$style.homeTextArea">
             <div :class="$style.homeTextAreaLeftBox">
-              <textarea :class="$style.homeTextAreaTag" v-model="text" name="" id="" cols="30" rows="25"
-                placeholder='To rewrite text, enter or paste it here and press "Paraphrase."'></textarea>
+              <textarea id="" v-model="text" :class="$style.homeTextAreaTag" name="" cols="30" rows="25"
+                placeholder="To rewrite text, enter or paste it here and press &quot;Paraphrase.&quot;" />
               <div v-show="!text" :class="$style.homeTextAreaBoxPaste" @click="pasteText">
                 <div :class="$style.homeTextAreaBoxPasteBox">
                   <svg :class="$style.homeTextArerPasteIcon"
                     class="MuiSvgIcon-root MuiSvgIcon-colorPrimary MuiSvgIcon-fontSizeMedium" focusable="false"
                     aria-hidden="true" viewBox="0 0 24 29" width="24" height="29" style="font-size: 30px;">
                     <path width="24" height="29" viewBox="0 0 24 29" fill="#499557" xmlns="http://www.w3.org/2000/svg"
-                      d="M20.7418 3.25678H15.4522C14.9207 1.78883 13.5286 0.72583 11.8835 0.72583C10.2384 0.72583 8.84639 1.78883 8.31489 3.25678H3.02521C1.63319 3.25678 0.494263 4.3957 0.494263 5.78772V26.0353C0.494263 27.4273 1.63319 28.5662 3.02521 28.5662H20.7418C22.1339 28.5662 23.2728 27.4273 23.2728 26.0353V5.78772C23.2728 4.3957 22.1339 3.25678 20.7418 3.25678ZM11.8835 3.25678C12.5795 3.25678 13.149 3.82624 13.149 4.52225C13.149 5.21826 12.5795 5.78772 11.8835 5.78772C11.1875 5.78772 10.618 5.21826 10.618 4.52225C10.618 3.82624 11.1875 3.25678 11.8835 3.25678ZM20.7418 26.0353H3.02521V5.78772H5.55615V9.58414H18.2109V5.78772H20.7418V26.0353Z">
-                    </path>
+                      d="M20.7418 3.25678H15.4522C14.9207 1.78883 13.5286 0.72583 11.8835 0.72583C10.2384 0.72583 8.84639 1.78883 8.31489 3.25678H3.02521C1.63319 3.25678 0.494263 4.3957 0.494263 5.78772V26.0353C0.494263 27.4273 1.63319 28.5662 3.02521 28.5662H20.7418C22.1339 28.5662 23.2728 27.4273 23.2728 26.0353V5.78772C23.2728 4.3957 22.1339 3.25678 20.7418 3.25678ZM11.8835 3.25678C12.5795 3.25678 13.149 3.82624 13.149 4.52225C13.149 5.21826 12.5795 5.78772 11.8835 5.78772C11.1875 5.78772 10.618 5.21826 10.618 4.52225C10.618 3.82624 11.1875 3.25678 11.8835 3.25678ZM20.7418 26.0353H3.02521V5.78772H5.55615V9.58414H18.2109V5.78772H20.7418V26.0353Z" />
                   </svg>
                   <i>Paste Text</i>
                 </div>
@@ -69,12 +120,14 @@ async function parapharseText() {
                   <Icon :class="$style.homeIcon" icon="bi:cloud-arrow-up" />
                   <span>Upload Doc</span>
                 </div>
-                <button :class="$style.homeTextAreaLeftButton" @click="parapharseText">Paraphrase</button>
+                <button :class="$style.homeTextAreaLeftButton" @click="parapharseText">
+                  Paraphrase
+                </button>
               </div>
             </div>
             <div :class="$style.homeTextAreaRightBox">
-              <textarea :class="$style.homeTextAreaTag" disable name="" id="" v-model="result" cols="30" rows="25"
-                placeholder='To rewrite text, enter or paste it here and press "Paraphrase."'></textarea>
+              <textarea id="" v-model="result" :class="$style.homeTextAreaTag" disable name="" cols="30" rows="25"
+                placeholder="To rewrite text, enter or paste it here and press &quot;Paraphrase.&quot;" />
             </div>
           </div>
         </div>
@@ -84,8 +137,10 @@ async function parapharseText() {
 
       <div :class="$style.homeGetPremium">
         <div :class="$style.homeGetPremiumContent">
-          <p :class="$style.homeGetPremiumDescription">Whether you’re writing emails, essays, or social media posts,
-            QuillBot has your back.</p>
+          <p :class="$style.homeGetPremiumDescription">
+            Whether you’re writing emails, essays, or social media posts,
+            QuillBot has your back.
+          </p>
           <div :class="$style.homeGetPremiumBtnBox">
             <button :class="$style.homeGetPremiumBtn">
               <svg class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-10dohqv" focusable="false" aria-hidden="true"
@@ -160,13 +215,17 @@ async function parapharseText() {
 .homeContentLanguageList {
   display: flex;
   align-items: center;
+  position: relative;
 
-  li {
+  .homeContentLanguageListItem {
     padding: 8px 16px;
     font-size: 14px;
     color: #505050;
     border-radius: 8px 8px 0px 0px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    position: relative;
 
     &.homeLanguageActiveItem {
       background-color: #ffff;
@@ -184,7 +243,8 @@ async function parapharseText() {
 
 .homeTextAreaBox {
   position: relative;
-  box-shadow: rgba(0, 0, 0, 0.2) 0px 20px 20px 0px;;
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 20px 20px 0px;
+  ;
 }
 
 .homeTextAreaBoxHeader {
@@ -194,6 +254,7 @@ async function parapharseText() {
   line-height: 1.5;
   height: 50px;
   display: flex;
+  justify-content: space-between;
   align-items: center;
   background-color: #ffff;
   border-bottom: 1px solid #DEE1E3;
@@ -204,6 +265,22 @@ async function parapharseText() {
   padding: 13px 12px 12px 20px;
   font-weight: 700;
   font-size: 16px;
+}
+
+.homeTextAreaHeaderBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 16px;
+  border: 1px solid #499557;
+  border-radius: 20px;
+  margin-right: 8px;
+
+  span {
+    font-weight: 600;
+    color: #499557;
+    font-size: 14px;
+  }
 }
 
 .homeTextAreaBoxHeaderValue {
@@ -230,20 +307,20 @@ async function parapharseText() {
 }
 
 .homeTextAreaTag {
-    resize: none;
-    width: 100%;
-    border: none;
-    padding: 30px 36px 8px 20px;
+  resize: none;
+  width: 100%;
+  border: none;
+  padding: 30px 36px 8px 20px;
 
-    &::placeholder {
-      font-size: 16px;
-      color: #8B8B8B;
-      font-weight: 300;
-    }
+  &::placeholder {
+    font-size: 16px;
+    color: #8B8B8B;
+    font-weight: 300;
+  }
 
-    &:focus {
-      outline: none;
-    }
+  &:focus {
+    outline: none;
+  }
 }
 
 .homeTextAreaLeftFooter {
@@ -380,5 +457,42 @@ async function parapharseText() {
 .homeTextArerPasteIcon {
   color: #499557;
   width: 24px;
+}
+
+.homeExpandLanguages {
+  width: 520px;
+  display: grid;
+  column-gap: 12px;
+  grid-auto-flow: column;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(9, 1fr);
+  position: absolute;
+  top: 36px;
+  left: 27%;
+  background-color: #ffff;
+  z-index: 9;
+  padding: 4px;
+  border-radius: 4px;
+  box-shadow: rgba(0, 0, 0, 0.08) 0px 8px 16px 0px, rgba(0, 0, 0, 0.04) 0px 16px 20px 0px, rgba(0, 0, 0, 0.12) 0px 0px 2px 0px;
+
+  div {
+    padding: 8px;
+    height: 36px;
+    font-weight: 400;
+    line-height: 20px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 4px;
+
+    &:hover {
+      background-color: #ebebeb;
+    }
+  }
+}
+
+.homeExpandLanguagesActiveItem {
+  background-color: rgba(46, 125, 50, 0.1);
 }
 </style>
