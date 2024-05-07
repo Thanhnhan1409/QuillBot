@@ -183,6 +183,10 @@ const userMenu: IUserMenu[] = [
     align-items: center;
     gap: 8px;
     border-bottom: 1px solid rgb(222, 225, 227);
+
+    &:hover {
+        background-color: #f8f8f8;
+    }
 }
 
 .headerMenuItemTitle {
