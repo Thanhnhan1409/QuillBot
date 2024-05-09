@@ -64,6 +64,45 @@ async function parapharseText() {
     console.error(error)
   }
 }
+
+const boundingRect = ref({ x: 0, y: 0 })
+const isTooltipAvailable = ref<boolean>(false)
+
+onMounted(() => {
+  document.addEventListener('selectionchange', () => {
+    const selection = window.getSelection()
+    if (!selection?.rangeCount) {
+      isTooltipAvailable.value = false
+      return
+    }
+
+    const range = selection.getRangeAt(0)
+    const rect = range.getBoundingClientRect()
+    boundingRect.value = {
+      x: rect.right,
+      y: rect.top
+    }
+  })
+  // document.addEventListener('mouseup', () => {
+  //   isTooltipAvailable.value = true
+  // })
+})
+
+function handleMouseBlur() {
+  isTooltipAvailable.value = false
+}
+
+async function handleMouseup() {
+  const selection = window.getSelection()
+  if (selection?.getRangeAt(0).toString().length === 0) {
+    isTooltipAvailable.value = false
+    return
+  }
+  isTooltipAvailable.value = true
+  text.value = selection?.getRangeAt(0).toString() || ''
+  await parapharseText()
+
+}
 </script>
 
 <template>
@@ -126,8 +165,23 @@ async function parapharseText() {
               </div>
             </div>
             <div :class="$style.homeTextAreaRightBox">
-              <textarea id="" v-model="result" :class="$style.homeTextAreaTag" disable name="" cols="30" rows="25"
-                placeholder="To rewrite text, enter or paste it here and press &quot;Paraphrase.&quot;" />
+              <div v-if="isTooltipAvailable" :style="{
+                backgroundColor: 'red',
+                width: '20px',
+                height: '20px',
+                pointerEvents: 'none',
+                position: 'fixed',
+                zIndex: 999,
+                top: `${boundingRect.y}px`,
+                right: `${boundingRect.x}px`,
+              }">
+                heheh
+              </div>
+              <div :class="$style.homeTextAreaTag" contenteditable @blur="handleMouseBlur"
+                placeholder="To rewrite text, enter or paste it here and press &quot;Paraphrase.&quot;"
+                @mouseup="handleMouseup">
+                {{ result }}
+              </div>
             </div>
           </div>
         </div>
