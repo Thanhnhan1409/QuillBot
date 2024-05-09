@@ -92,7 +92,7 @@ const userMenu: IUserMenu[] = [
     justify-content: space-between;
     align-items: center;
     padding: 8px;
-    position: fixed;
+    position: absolute;
     right: 0;
     top: 0;
     left: 0;

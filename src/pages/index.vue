@@ -2,6 +2,7 @@
 import { openaiApi } from '@/api/openai'
 
 const text = ref<string>('')
+const replaceText = ref<string>('')
 const isCollapseLanguageList = ref<boolean>(false)
 const result = ref<string>('')
 const languageList = [
@@ -38,8 +39,11 @@ const languageList = [
   'Portuguese',
 ]
 const activeItem = ref<number>(1)
+const language = ref<string>(languageList[activeItem.value])
+
 
 function handleActiveItem(id: number) {
+  language.value = languageList[id]
   if (id === 4) {
     isCollapseLanguageList.value = !isCollapseLanguageList.value
   }
@@ -57,7 +61,7 @@ function pasteText() {
 
 async function parapharseText() {
   try {
-    const res = await openaiApi.getParaphraseTextFull(text.value)
+    const res = await openaiApi.getParaphraseTextFull(text.value, language.value)
     result.value = res
   }
   catch (error) {
@@ -71,13 +75,14 @@ const isTooltipAvailable = ref<boolean>(false)
 onMounted(() => {
   document.addEventListener('selectionchange', () => {
     const selection = window.getSelection()
-    if (!selection?.rangeCount) {
+    if (!selection?.rangeCount || selection.getRangeAt(0).toString().length === 0) {
       isTooltipAvailable.value = false
       return
     }
 
     const range = selection.getRangeAt(0)
     const rect = range.getBoundingClientRect()
+    
     boundingRect.value = {
       x: rect.right,
       y: rect.top
@@ -99,8 +104,12 @@ async function handleMouseup() {
     return
   }
   isTooltipAvailable.value = true
-  text.value = selection?.getRangeAt(0).toString() || ''
-  await parapharseText()
+  const selectedText: string = selection?.getRangeAt(0).toString() || ''
+  const range = selection?.getRangeAt(0)
+  const res = await openaiApi.getParaphraseText(selectedText, text.value, language.value )
+  replaceText.value = res
+  range?.deleteContents()
+  range?.insertNode(document.createTextNode(replaceText.value));
 
 }
 </script>
@@ -167,13 +176,14 @@ async function handleMouseup() {
             <div :class="$style.homeTextAreaRightBox">
               <div v-if="isTooltipAvailable" :style="{
                 backgroundColor: 'red',
-                width: '20px',
+                width: '60px',
                 height: '20px',
+                borderRadius: '16px',
                 pointerEvents: 'none',
                 position: 'fixed',
                 zIndex: 999,
                 top: `${boundingRect.y}px`,
-                right: `${boundingRect.x}px`,
+                left: `${boundingRect.x + 6}px`,
               }">
                 heheh
               </div>
