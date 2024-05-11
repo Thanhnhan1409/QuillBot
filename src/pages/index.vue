@@ -168,7 +168,7 @@ function replaceSelectedText() {
 async function getRepalceText() {
   try {
     const content = selection?.getRangeAt(0).toString() || ''
-    const res = 'hihii'
+    const res = await openaiApi.getParaphraseText(content, result.value, language.value)
     replaceText.value.push(res)
     if (replaceText.value.length > 1)
       activeReplaceTextId.value++
