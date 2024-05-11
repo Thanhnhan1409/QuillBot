@@ -25,6 +25,7 @@ export const openaiApi = {
             Paragraphed text: ${fullContent}`
             const result = await model.generateContent(prompt)
             const response = await result.response
+            console.log('responese', response);
             const text = await response.text()
             return text
         }
