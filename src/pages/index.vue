@@ -79,6 +79,7 @@ function pasteText() {
 }
 
 async function parapharseText() {
+
   try {
     const res = await openaiApi.getParaphraseTextFull(text.value, language.value)
     result.value = res
@@ -167,7 +168,7 @@ function replaceSelectedText() {
 async function getRepalceText() {
   try {
     const content = selection?.getRangeAt(0).toString() || ''
-    const res = await openaiApi.getParaphraseText(content, result.value, language.value)
+    const res = 'hihii'
     replaceText.value.push(res)
     if (replaceText.value.length > 1)
       activeReplaceTextId.value++
@@ -179,6 +180,8 @@ async function getRepalceText() {
 async function handleTOpenPopover() {
   status.value = 'popover'
   getRepalceText()
+  console.log('hahahah');
+  
 }
 
 function handlePreReplacetext() {
