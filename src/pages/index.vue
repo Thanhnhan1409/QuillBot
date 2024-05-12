@@ -79,6 +79,7 @@ function pasteText() {
 }
 
 async function parapharseText() {
+
   try {
     const res = await openaiApi.getParaphraseTextFull(text.value, language.value)
     result.value = res
@@ -179,6 +180,8 @@ async function getRepalceText() {
 async function handleTOpenPopover() {
   status.value = 'popover'
   getRepalceText()
+  console.log('hahahah');
+  
 }
 
 function handlePreReplacetext() {
