@@ -180,8 +180,6 @@ async function getRepalceText() {
 async function handleTOpenPopover() {
   status.value = 'popover'
   getRepalceText()
-  console.log('hahahah');
-  
 }
 
 function handlePreReplacetext() {
@@ -744,7 +742,7 @@ async function handleCopyText() {
   display: flex;
   width: 100%;
   flex-direction: column;
-  column-gap: 4px;
+  gap: 4px;
   padding: 0 16px;
 }
 
@@ -769,7 +767,7 @@ async function handleCopyText() {
 }
 
 .homePopoverContentArea {
-  max-height: 120px;
+  height: 120px;
   padding: 12px;
   border-radius: 10px;
   background-color: #F8F8F8;
