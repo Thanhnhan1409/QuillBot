@@ -1,4 +1,4 @@
-import { isInput, isTextarea } from "./utils";
+import { createRelativeRect, isInput, isInputOrTextarea, isTextarea } from "./utils";
 
 export interface GetSelectionResult {
     start: number
@@ -26,6 +26,8 @@ export function getTextareaSelection(element: HTMLElement) {
         direction: el.selectionDirection,
         text: el.value.slice(el.selectionStart || 0, el.selectionEnd || 0)
     }
+    console.log(result as GetSelectionResult);
+
     return result as GetSelectionResult
 }
 
@@ -51,7 +53,7 @@ export function getSelectCharacterOffsetWithin(element: HTMLElement) {
 // text: llo </b>wor<b>
 // direction: forward
 
-export function getContenteditableSelection(element: HTMLElement) : GetSelectionResult {
+export function getContenteditableSelection(element: HTMLElement): GetSelectionResult {
     const selection = window.getSelection()
 
     if (!selection || selection.rangeCount === 0)
@@ -70,7 +72,7 @@ export function getContenteditableSelection(element: HTMLElement) : GetSelection
         text: tempDiv.innerHTML || range?.toString() || '',
         direction: 'forward' as const
     });
-    
+
     return {
         start,
         end,
@@ -89,7 +91,7 @@ export function getSelection(element: HTMLElement) {
 
 }
 
-function getDefaultSelection() :GetSelectionResult {
+function getDefaultSelection(): GetSelectionResult {
     return {
         start: 0,
         end: 0,
@@ -98,3 +100,58 @@ function getDefaultSelection() :GetSelectionResult {
     }
 }
 
+
+// export function getSelectionRect(element?: HTMLElement): GetSelectionRectResult {
+//     const _element = (element || document.activeElement) as HTMLElement
+
+//     function processRect(domRect: DOMRect): Rect {
+//         let _rect = domRect.toJSON()
+//         if (isInputOrTextarea(_element))
+//             _rect = createRelativeRect(_rect, _element.scrollLeft, _element.scrollTop)
+
+//         _rect = clampRect(_rect, _element.getBoundingClientRect().toJSON())
+
+//         return _rect
+//     }
+
+//     let shadowEl: HTMLElement | null = null
+//     let inputRect: DOMRect | null = null
+//     let inputRects: DOMRect[] | null = null
+
+//     if (isInputOrTextarea(_element)) {
+//         const _inputOrTextareaElement = _element as HTMLInputElement | HTMLTextAreaElement
+
+//         const shadowWrapper = shadowInput(_inputOrTextareaElement)
+//         document.body.appendChild(shadowWrapper.shadowEl)
+
+//         shadowEl = shadowWrapper.shadowEl
+
+//         inputRect = shadowWrapper.highlightEl.getBoundingClientRect()
+//         inputRects = Array.from(shadowWrapper.highlightEl.getClientRects())
+
+//         document.body.removeChild(shadowEl)
+//     }
+
+//     const selection = window.getSelection()
+//     const range = selection?.getRangeAt(0)
+
+//     const rect = clampRect(
+//         processRect(inputRect || range!.getBoundingClientRect()),
+//         _element?.getBoundingClientRect().toJSON(),
+//     )
+
+//     const rects = Array.from(inputRects || range?.getClientRects() || []).map(processRect)
+
+//     const rectTop = rects[0]
+//     const rectBottom = rects[rects.length - 1]
+
+//     const start = { x: rectTop?.left || 0, y: rectTop?.top || 0 }
+//     const end = { x: rectBottom?.right || 0, y: rectBottom?.bottom || 0 }
+
+//     return {
+//         rect,
+//         children: rects.filter(Boolean) as Rect[],
+//         start,
+//         end,
+//     }
+// }
