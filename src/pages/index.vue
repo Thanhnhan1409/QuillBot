@@ -327,7 +327,7 @@ onBeforeUnmount(() => {
             <div>
               <span :class="$style.homeTextAreaBoxHeaderTitle">Models:</span>
               <span :class="$style.homeTextAreaBoxHeaderValue">Standard</span>
-            </div>ré
+            </div>
             <div :class="$style.homeTextAreaHeaderBtn">
               <Icon :class="$style.homeIcon" icon="logos:chrome" />
               <span>Add to Chrome</span>
@@ -366,6 +366,7 @@ onBeforeUnmount(() => {
                 padding: '1px',
                 cursor: 'pointer',
                 display: 'flex',
+                position: 'absolute',
               }" @click.prevent="handleOpenPopover">
                 <img width="20" height="20" src="https://sgroupvn.org/_nuxt/img/logo-sgroup-symbol.ae66e60.png" alt="">
               </div>
@@ -380,6 +381,7 @@ onBeforeUnmount(() => {
                 gap: '16px',
                 padding: '12px 12px 8px 12px',
                 boxShadow: '0px 6px 12px 0px #0000002E',
+                position: 'absolute',
               }">
                 <div :class="$style.homePopoverHeader">
                   <div :class="$style.homePopoverHeaderTitle">
