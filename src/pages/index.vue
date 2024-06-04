@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { computePosition, flip, inline, offset, shift } from '@floating-ui/dom'
 import { openaiApi } from '@/api/openai'
+import type { GetSelectionResult } from '@/core/get'
+import { getContenteditableSelection, removeContenteditableSelection, replaceContenteditableSelection, setContenteditableSelection } from '@/core'
 
 type SelectStatus = 'initial' | 'tooltip' | 'popover'
 interface IPosition {
@@ -7,6 +10,10 @@ interface IPosition {
   y: number
 }
 
+const homeAreaRef = ref<HTMLElement>()
+const areaLeft = ref<HTMLElement>()
+const areaDevider = ref<HTMLElement>()
+const areaRight = ref<HTMLElement>()
 const text = ref<string>('')
 const replaceText = ref<string[]>([])
 const isCollapseLanguageList = ref<boolean>(false)
@@ -52,14 +59,25 @@ const area = ref<HTMLElement>()
 const tooltip = ref<HTMLElement>()
 const popover = ref<HTMLElement>()
 const resultRef = ref<HTMLElement>()
-const boundingRect = ref<IPosition>({ x: 0, y: 0 })
-const tooltipAvailable = ref<boolean>(false)
 let selection: Selection | null = null
 const mousePos = ref<IPosition>({
   x: 0,
   y: 0,
 })
 const activeReplaceTextId = ref<number>(0)
+const rect = ref<DOMRect>(new DOMRect())
+const childReacts = ref<Array<DOMRect>>([])
+const selectionPos = ref<GetSelectionResult>({
+  start: 0,
+  end: 0,
+  direction: 'forward',
+  text: '',
+})
+const isResizing = ref<boolean>(false)
+const virtualElement = ref({
+  getBoundingClientRect: () => rect.value,
+  getClientRects: () => [childReacts.value[childReacts.value.length - 1]],
+})
 
 function handleActiveItem(id: number) {
   language.value = languageList[id]
@@ -72,6 +90,51 @@ function handleActiveItem(id: number) {
   }
 }
 
+async function attachTooltip() {
+  if (tooltip.value && status.value === 'tooltip') {
+    // virtualElement include getBoundingClientRect and getClientRect
+    // console.log(virtualElement.value.getClientRects(), virtualElement.value.getBoundingClientRect())
+    const { x, y, strategy } = await computePosition(virtualElement.value, tooltip.value, {
+      strategy: 'absolute',
+      placement: 'right',
+      middleware: [
+        flip(),
+        offset({
+          mainAxis: 4,
+        }),
+        inline(),
+        shift(),
+      ],
+    })
+
+    tooltip.value.style.position = `${strategy}`
+    // console.log('x', x, 'y', y);
+    tooltip.value.style.top = `${y}px`
+    tooltip.value.style.left = `${x}px`
+  }
+}
+
+async function attachPopover() {
+  if (popover.value) {
+    const { x, y, strategy } = await computePosition(virtualElement.value, popover.value, {
+      strategy: 'absolute',
+      placement: 'bottom-end',
+      middleware: [
+        flip(),
+        offset({
+          mainAxis: 10,
+        }),
+        shift(),
+      ],
+    })
+    const maxX = window.innerWidth - 500
+    const posX = Math.min(x, maxX)
+    popover.value.style.top = `${y}px`
+    popover.value.style.left = `${posX}px`
+    popover.value.style.position = `${strategy}`
+  }
+}
+
 function pasteText() {
   navigator.clipboard.readText().then((clipText) => {
     text.value = clipText
@@ -79,7 +142,6 @@ function pasteText() {
 }
 
 async function parapharseText() {
-
   try {
     const res = await openaiApi.getParaphraseTextFull(text.value, language.value)
     result.value = res
@@ -90,54 +152,46 @@ async function parapharseText() {
 }
 
 onMounted(() => {
-  document.addEventListener('selectionchange', () => {
-    selection = window.getSelection()
-    if (!selection?.rangeCount || selection.getRangeAt(0).toString().length === 0) {
-      tooltipAvailable.value = false
+  document.addEventListener('selectionchange', async () => {
+    const selection = window.getSelection()
+    if (!selection?.rangeCount || selection.toString().length === 0) {
+      status.value = 'initial'
+      replaceText.value = []
+      activeReplaceTextId.value = 0
       return
     }
 
     const range = selection.getRangeAt(0)
-    const rect = range.getBoundingClientRect()
+    // Array like
+    rect.value = range.getBoundingClientRect()
+    childReacts.value = Array.from(range.getClientRects())
 
-    boundingRect.value = {
-      x: rect.right,
-      y: rect.top,
+    mousePos.value = {
+      x: rect.value.left,
+      y: rect.value.bottom,
     }
   })
 
-  document.addEventListener('mouseover', (e) => {
+  document.addEventListener('mousemove', (e) => {
     mousePos.value.x = e.clientX
     mousePos.value.y = e.clientY
   })
 })
 
 function reselectElement() {
-  if (!selection?.anchorNode || !selection.focusNode)
-    return
-
-  const range = document.createRange()
-
-  range.setStart(selection?.anchorNode, selection?.anchorOffset || 0)
-  range.setEnd(selection?.focusNode, selection?.focusOffset || 0)
-
-  selection.removeAllRanges()
-  selection.addRange(range)
+  area.value && setContenteditableSelection(area.value, selectionPos.value)
 }
 
 function isMouseInEllement(element: HTMLElement) {
-  const elementRect = element.getBoundingClientRect()
-  return (
-    mousePos.value.x >= elementRect.left
-    && mousePos.value.x <= elementRect.right
-    && mousePos.value.y <= elementRect.bottom
-    && mousePos.value.y >= elementRect.top
-  )
+  if (!element?.getBoundingClientRect())
+    return
+  const eBounding = element.getBoundingClientRect()
+  return mousePos.value.x >= eBounding.left && mousePos.value.x <= eBounding.right && mousePos.value.y >= eBounding.top && mousePos.value.y <= eBounding.bottom
 }
 
 function handleMouseBlur() {
   if ((area.value && isMouseInEllement(area.value))
-    || (popover.value && isMouseInEllement(popover.value))
+    || (tooltip.value && isMouseInEllement(tooltip.value))
     || (popover.value && isMouseInEllement(popover.value))
   ) {
     reselectElement()
@@ -150,35 +204,41 @@ function handleMouseBlur() {
 }
 
 async function handleMouseup() {
-  const selection = window.getSelection()
-  if (selection?.getRangeAt(0).toString().length === 0) {
+  if (area.value)
+    selectionPos.value = getContenteditableSelection(area.value)
+  if (selectionPos.value.start === selectionPos.value.end) {
     status.value = 'initial'
     return
   }
   status.value = 'tooltip'
+  await nextTick(attachTooltip)
 }
 
 function replaceSelectedText() {
+  if (area.value) {
+    removeContenteditableSelection(area.value, selectionPos.value)
+    replaceContenteditableSelection(area.value, { start: selectionPos.value.start, end: selectionPos.value.end, text: replaceText.value[activeReplaceTextId.value] })
+  }
   status.value = 'initial'
-  const range = selection?.getRangeAt(0)
-  range?.deleteContents()
-  range?.insertNode(document.createTextNode(replaceText.value[activeReplaceTextId.value]))
 }
 
 async function getRepalceText() {
   try {
     const content = selection?.getRangeAt(0).toString() || ''
     const res = await openaiApi.getParaphraseText(content, result.value, language.value)
+    // const res = 'hihii'
     replaceText.value.push(res)
     if (replaceText.value.length > 1)
       activeReplaceTextId.value++
-  } catch (error) {
+  }
+  catch (error) {
     console.error(error)
   }
 }
 
-async function handleTOpenPopover() {
+async function handleOpenPopover() {
   status.value = 'popover'
+  nextTick(attachPopover)
   getRepalceText()
 }
 
@@ -198,11 +258,45 @@ function handleClosePopover() {
   status.value = 'initial'
   replaceText.value = []
   activeReplaceTextId.value = 0
+  area.value && setContenteditableSelection(area.value, { start: selectionPos.value.end, end: selectionPos.value.end })
 }
 
 async function handleCopyText() {
-  await navigator.clipboard.writeText(replaceText.value[activeReplaceTextId.value]);
+  await navigator.clipboard.writeText(replaceText.value[activeReplaceTextId.value])
 }
+
+function startResizing() {
+  isResizing.value = true
+  document.addEventListener('mousemove', resize)
+  document.addEventListener('mouseup', stopResizing)
+}
+
+function resize(event: { clientX: number }) {
+  if (!isResizing.value)
+    return
+
+  if (homeAreaRef.value && areaRight.value && areaLeft.value && areaDevider.value) {
+    const containerRect = homeAreaRef.value.getBoundingClientRect()
+    const newLeftWidth = event.clientX - containerRect.left
+    const newLeftWidthPercent = (newLeftWidth / containerRect.width) * 100
+    const dividerWidthPercent = (areaDevider.value.offsetWidth / containerRect.width) * 100
+
+    areaLeft.value.style.width = `${newLeftWidthPercent}%`
+    areaRight.value.style.width = `${100 - newLeftWidthPercent - dividerWidthPercent}%`
+    areaDevider.value.style.left = `${newLeftWidthPercent}%`
+  }
+}
+
+function stopResizing() {
+  isResizing.value = false
+  document.removeEventListener('mousemove', resize)
+  document.removeEventListener('mouseup', stopResizing)
+}
+
+onBeforeUnmount(() => {
+  document.removeEventListener('mousemove', resize)
+  document.removeEventListener('mouseup', stopResizing)
+})
 </script>
 
 <template>
@@ -233,14 +327,14 @@ async function handleCopyText() {
             <div>
               <span :class="$style.homeTextAreaBoxHeaderTitle">Models:</span>
               <span :class="$style.homeTextAreaBoxHeaderValue">Standard</span>
-            </div>
+            </div>ré
             <div :class="$style.homeTextAreaHeaderBtn">
               <Icon :class="$style.homeIcon" icon="logos:chrome" />
               <span>Add to Chrome</span>
             </div>
           </div>
-          <div :class="$style.homeTextArea">
-            <div :class="$style.homeTextAreaLeftBox">
+          <div ref="homeAreaRef" :class="$style.homeTextArea">
+            <div ref="areaLeft" :class="$style.homeTextAreaLeftBox">
               <textarea id="" v-model="text" :class="$style.homeTextAreaTag" name="" cols="30" rows="25"
                 placeholder="To rewrite text, enter or paste it here and press &quot;Paraphrase.&quot;" />
               <div v-show="!text" :class="$style.homeTextAreaBoxPaste" @click="pasteText">
@@ -264,17 +358,15 @@ async function handleCopyText() {
                 </button>
               </div>
             </div>
-            <div :class="$style.homeTextAreaRightBox">
+            <div ref="areaDevider" :class="$style.homeTextAreaDevider" @mousedown="startResizing" />
+            <div ref="areaRight" :class="$style.homeTextAreaRightBox">
               <div v-if="status === 'tooltip'" ref="tooltip" :style="{
                 backgroundColor: 'white',
                 borderRadius: '100%',
-                position: 'fixed',
-                zIndex: 999,
-                top: `${boundingRect.y + 4}px`,
-                left: `${boundingRect.x + 4}px`,
                 padding: '1px',
                 cursor: 'pointer',
-              }" @mousedown="handleTOpenPopover">
+                display: 'flex',
+              }" @click.prevent="handleOpenPopover">
                 <img width="20" height="20" src="https://sgroupvn.org/_nuxt/img/logo-sgroup-symbol.ae66e60.png" alt="">
               </div>
               <div v-else-if="status === 'popover'" ref="popover" :style="{
@@ -282,10 +374,6 @@ async function handleCopyText() {
                 width: '480px',
                 maxHeight: '278px',
                 borderRadius: '12px',
-                position: 'fixed',
-                zIndex: 999,
-                top: `${boundingRect.y + 6}px`,
-                left: `${boundingRect.x + 6}px`,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -315,11 +403,11 @@ async function handleCopyText() {
                       <span>Refresh</span>
                     </div>
                     <div :class="$style.homePopoverContentRefresh">
-                      <Icon @click="handlePreReplacetext" :class="$style.homePopoverIcon"
-                        icon="material-symbols:chevron-left-rounded" color="#DADCE0" />
-                      <span>{{ activeReplaceTextId + 1 }}/{{ replaceText.length }}</span>
-                      <Icon @click="handleNextReplacetext" :class="$style.homePopoverIcon"
-                        icon="material-symbols:chevron-right-rounded" color="#DADCE0" />
+                      <Icon :class="$style.homePopoverIcon" icon="material-symbols:chevron-left-rounded" color="#DADCE0"
+                        @click="handlePreReplacetext" />
+                      <span>{{ replaceText.length === 0 ? 0 : activeReplaceTextId + 1 }}/{{ replaceText.length }}</span>
+                      <Icon :class="$style.homePopoverIcon" icon="material-symbols:chevron-right-rounded"
+                        color="#DADCE0" @click="handleNextReplacetext" />
                     </div>
                   </div>
                   <div ref="resultRef" :class="$style.homePopoverContentArea">
@@ -331,7 +419,7 @@ async function handleCopyText() {
                   </div>
                 </div>
                 <div :class="$style.homePopoverBtnGroup">
-                  <button @click="handleCopyText" :class="$style.homePopoverCopyGroup">
+                  <button :class="$style.homePopoverCopyGroup" @click="handleCopyText">
                     Copy
                   </button>
                   <button @mousedown="replaceSelectedText">
@@ -346,9 +434,17 @@ async function handleCopyText() {
               </div>
               <div ref="area" :class="$style.homeTextAreaTag" contenteditable
                 placeholder="To rewrite text, enter or paste it here and press &quot;Paraphrase.&quot;"
-                @blur="handleMouseBlur" @mouseup="handleMouseup">
+                @mouseup="handleMouseup" @blur="handleMouseBlur">
                 {{ result }}
               </div>
+              <!-- <textarea ref="textareaRef" :class="$style.homeTextAreaTag" contenteditable
+                placeholder="To rewrite text, enter or paste it here and press &quot;Paraphrase.&quot;"
+                @blur="handleMouseBlur" @mouseup="handleMouseup">
+              </textarea>
+              <input ref="area" :class="$style.homeTextAreaTag" contenteditable
+                placeholder="To rewrite text, enter or paste it here and press &quot;Paraphrase.&quot;"
+                @blur="handleMouseBlur" @mouseup="handleMouseup">
+                > -->
             </div>
           </div>
         </div>
@@ -515,12 +611,23 @@ async function handleCopyText() {
   background-color: #ffff;
   display: flex;
   align-items: start;
+  position: relative;
 }
 
 .homeTextAreaLeftBox {
   position: relative;
   width: 50%;
-  border-right: 3px solid rgba(0, 0, 0, 0.2);
+}
+
+.homeTextAreaDevider {
+  width: 3px;
+  background-color: rgba(0, 0, 0, 0.2);
+  cursor: col-resize;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .homeTextAreaRightBox {
@@ -757,6 +864,7 @@ async function handleCopyText() {
   display: flex;
   align-items: center;
   gap: 4px;
+  cursor: pointer;
 
   span {
     font-size: 12px;
