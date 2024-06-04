@@ -1,4 +1,4 @@
-import { isInput, isInputOrTextarea, isTextarea } from "./utils";
+import { isInput, isTextarea } from "./utils";
 
 export interface GetSelectionResult {
     start: number
