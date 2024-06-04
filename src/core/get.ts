@@ -1,4 +1,4 @@
-import { createRelativeRect, isInput, isInputOrTextarea, isTextarea } from "./utils";
+import { isInput, isInputOrTextarea, isTextarea } from "./utils";
 
 export interface GetSelectionResult {
     start: number
